@@ -19,9 +19,12 @@ class AppData with ChangeNotifier {
   String ip = "localhost";
   String port = "8888";
 
+  String buttonText = "Connect";
+  bool connect = true;
+
   IOWebSocketChannel? _socketClient;
   ConnectionStatus connectionStatus = ConnectionStatus.disconnected;
-
+  
   String? mySocketId;
   List<String> clients = [];
   String selectedClient = "";
@@ -33,6 +36,10 @@ class AppData with ChangeNotifier {
 
   AppData() {
     _getLocalIpAddress();
+  }
+
+  void clearIP(){
+    _socketClient = null;
   }
 
   void updateIpContent(String newContent) {
@@ -57,8 +64,8 @@ class AppData with ChangeNotifier {
   }
 
   void connectToServer() async {
-
-    _socketClient = IOWebSocketChannel.connect("ws://$ip:$port");
+    _socketClient ??= IOWebSocketChannel.connect("ws://$ip:$port");
+    //sendMessage(message);
     _socketClient!.stream.listen(
       (message) {
         final data = jsonDecode(message);
@@ -70,10 +77,16 @@ class AppData with ChangeNotifier {
     );
   }
 
+  void sendMessage(String message) {
+  if (_socketClient != null) {
+    _socketClient!.sink.add(message);
+  } else {
+    print("WebSocket not connected.");
+  }
+}
+
   disconnectFromServer() async {
     // Simulate connection delay
-    await Future.delayed(const Duration(seconds: 1));
-
     _socketClient!.sink.close();
   }
 }

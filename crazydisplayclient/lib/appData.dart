@@ -1,4 +1,3 @@
-
 // ignore_for_file: file_names, camel_case_types
 
 import 'dart:convert';
@@ -6,6 +5,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:web_socket_channel/io.dart';
+import 'package:intl/intl.dart';
 
 enum ConnectionStatus {
   disconnected,
@@ -24,12 +24,15 @@ class AppData with ChangeNotifier {
 
   IOWebSocketChannel? _socketClient;
   ConnectionStatus connectionStatus = ConnectionStatus.disconnected;
-  
+
   String? mySocketId;
-  List<String> clients = [];
+  List<dynamic> listClients = [];
+  List<String> listMessages = [];
+  List<String> sentMessages = [];
   String selectedClient = "";
   int? selectedClientIndex;
   String messages = "";
+  String filePath = ("assets/listMessages.txt");
 
   bool file_saving = false;
   bool file_loading = false;
@@ -38,7 +41,7 @@ class AppData with ChangeNotifier {
     _getLocalIpAddress();
   }
 
-  void clearIP(){
+  void clearIP() {
     _socketClient = null;
   }
 
@@ -65,28 +68,60 @@ class AppData with ChangeNotifier {
 
   void connectToServer() async {
     _socketClient ??= IOWebSocketChannel.connect("ws://$ip:$port");
-    //sendMessage(message);
-    _socketClient!.stream.listen(
-      (message) {
-        final data = jsonDecode(message);
+    _socketClient!.stream.listen((message) {
+      final data = jsonDecode(message);
+      listClients.add(data);
 
-        if (connectionStatus != ConnectionStatus.connected) {
-          connectionStatus = ConnectionStatus.connected;
-        }
+      if (connectionStatus != ConnectionStatus.connected) {
+        connectionStatus = ConnectionStatus.connected;
       }
-    );
+    });
   }
 
   void sendMessage(String message) {
-  if (_socketClient != null) {
-    _socketClient!.sink.add(message);
-  } else {
-    print("WebSocket not connected.");
+    if (_socketClient != null) {
+      _socketClient!.sink.add(message);
+      DateTime now = DateTime.now();
+      String formattedDateTime = DateFormat('yyyy-MM-dd HH:mm:ss').format(now);
+      if (!sentMessages.contains(message)) {
+        sentMessages.add(message);
+        listMessages.add("$formattedDateTime $message");
+        saveMessages(listMessages, filePath);
+      }
+    } else {
+      print("WebSocket not connected.");
+    }
   }
-}
 
   disconnectFromServer() async {
     // Simulate connection delay
     _socketClient!.sink.close();
+    if (connectionStatus == ConnectionStatus.connected) {
+      connectionStatus = ConnectionStatus.disconnected;
+    }
+  }
+
+  void saveMessages(List<String> messages, String filePath) {
+    // Abre el archivo en modo de escritura
+    var file = File(filePath);
+    var sink = file.openWrite();
+
+    // Escribe cada elemento de la lista en una línea del archivo
+    for (var elemento in messages) {
+      sink.writeln(elemento);
+    }
+
+    // Cierra el archivo
+    sink.close();
+  }
+
+  List<String> loadMessages(String filePath) {
+    // Abre el archivo en modo de lectura
+    var file = File(filePath);
+
+    // Lee todas las líneas del archivo y las guarda en una lista
+    var lines = file.readAsLinesSync();
+
+    return lines;
   }
 }

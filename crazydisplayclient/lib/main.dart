@@ -1,4 +1,6 @@
 import 'package:crazydisplayclient/appData.dart';
+import 'package:crazydisplayclient/clientLayout.dart';
+import 'package:crazydisplayclient/messageLayout.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -36,13 +38,12 @@ class _MyHomePageState extends State<MyHomePage> {
   final TextEditingController _idController =
       TextEditingController(text: "192.168.0.25");
   final TextEditingController _mssgController = TextEditingController();
-
-  List<String> clientList = [];
   bool showDynamicContent = false;
 
   @override
   Widget build(BuildContext context) {
     AppData appData = Provider.of<AppData>(context);
+    appData.listMessages = appData.loadMessages(appData.filePath);
     return Scaffold(
       appBar: AppBar(
         backgroundColor: appData.colorSec,
@@ -65,28 +66,42 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
             // Add your sidebar content here
             ListTile(
-              title: Text('Clients'),
+              title: Text('Clientes'),
               onTap: () {
-                // Handle item tap
-                setState(() {
-                  clientList.add("Pepe");
-                  showDynamicContent = !showDynamicContent;
-                });
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => ClientesPage()),
+                );
               },
             ),
-            if (clientList.isNotEmpty)
-              Column(children: [
-                Text('List of Clients:'),
-                for (String client in clientList)
-                  ListTile(
-                    title: Text(client),
-                    onTap: () {},
-                  )
-              ]),
             ListTile(
-              title: Text('Messages'),
+              title: Text('Mensajes'),
               onTap: () {
-                // Handle item tap
+                if (appData.connectionStatus == ConnectionStatus.connected) {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => MensajesPage()),
+                  );
+                } else {
+                  showDialog(
+                    context: context,
+                    builder: (BuildContext context) {
+                      return AlertDialog(
+                        title: Text('Error'),
+                        content: Text('No estás conectado al servidor'),
+                        actions: [
+                          TextButton(
+                            onPressed: () {
+                              // Close the alert dialog
+                              Navigator.of(context).pop();
+                            },
+                            child: Text('OK'),
+                          ),
+                        ],
+                      );
+                    },
+                  );
+                }
               },
             ),
             // Add more items as needed

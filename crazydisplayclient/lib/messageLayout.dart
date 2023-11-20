@@ -15,7 +15,7 @@ class MensajesPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: appData.colorSec,
-        title: Text('Mensajes'),
+        title: Text('Messages'),
       ),
       body: Column(
         children: [

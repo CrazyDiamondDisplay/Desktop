@@ -15,7 +15,7 @@ class ClientesPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: appData.colorSec,
-        title: Text('Clientes'),
+        title: Text('Clients'),
       ),
       body: Center(
         child: Align(
@@ -26,7 +26,7 @@ class ClientesPage extends StatelessWidget {
               Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: Text(
-                  'Clientes Conectados: ' +
+                  'Connected clients: ' +
                       appData.listClients[0][0].length.toString(),
                   style: TextStyle(
                     fontSize: 18,
@@ -38,8 +38,8 @@ class ClientesPage extends StatelessWidget {
                 scrollDirection: Axis.horizontal,
                 child: DataTable(
                   columns: [
-                    DataColumn(label: Text('Clientes Flutter')),
-                    DataColumn(label: Text('Clientes Android')),
+                    DataColumn(label: Text('Flutter clients')),
+                    DataColumn(label: Text('Android clients')),
                   ],
                   rows: List.generate(
                     // Assuming both lists have the same length

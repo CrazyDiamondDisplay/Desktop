@@ -78,6 +78,17 @@ class AppData with ChangeNotifier {
     });
   }
 
+  // Inside the AppData class
+  bool checkLogin(String username, String password) {
+    // Replace this with your actual login logic
+    // For simplicity, we're using hardcoded credentials "admin" and "password"
+    if (username == 'admin' && password == 'password') {
+      return true; // Successful login
+    } else {
+      return false; // Failed login
+    }
+  }
+
   void sendMessage(String message) {
     if (_socketClient != null) {
       _socketClient!.sink.add(message);

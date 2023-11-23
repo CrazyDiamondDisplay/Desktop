@@ -12,6 +12,7 @@ class ClientesPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     AppData appData = Provider.of<AppData>(context);
+
     return Scaffold(
       appBar: AppBar(
         backgroundColor: appData.colorSec,
@@ -42,12 +43,25 @@ class ClientesPage extends StatelessWidget {
                     DataColumn(label: Text('Android clients')),
                   ],
                   rows: List.generate(
-                    // Assuming both lists have the same length
-                    appData.listClients[0][0].length,
+                    // Use the maximum length of both lists
+                    appData.listClients[0][0].length >
+                            appData.listClients[1][0].length
+                        ? appData.listClients[0][0].length
+                        : appData.listClients[1][0].length,
                     (index) => DataRow(
                       cells: [
-                        DataCell(Text(appData.listClients[0][0][index])),
-                        DataCell(Text(appData.listClients[1][0][index])),
+                        DataCell(
+                          index < appData.listClients[0][0].length
+                              ? Text(appData.listClients[0][0][index])
+                              : Text(
+                                  ''), // Show empty text if the list doesn't have an entry at this index
+                        ),
+                        DataCell(
+                          index < appData.listClients[1][0].length
+                              ? Text(appData.listClients[1][0][index])
+                              : Text(
+                                  ''), // Show empty text if the list doesn't have an entry at this index
+                        ),
                       ],
                     ),
                   ),

@@ -36,6 +36,9 @@ class AppData with ChangeNotifier {
 
   bool file_saving = false;
   bool file_loading = false;
+  bool isLoggedIn = false;
+  bool showLoginForm = true;
+  String userName = "Not logged in";
 
   AppData() {
     _getLocalIpAddress();
@@ -78,10 +81,7 @@ class AppData with ChangeNotifier {
     });
   }
 
-  // Inside the AppData class
   bool checkLogin(String username, String password) {
-    // Replace this with your actual login logic
-    // For simplicity, we're using hardcoded credentials "admin" and "password"
     if (username == 'admin' && password == 'password') {
       return true; // Successful login
     } else {
@@ -93,10 +93,11 @@ class AppData with ChangeNotifier {
     if (_socketClient != null) {
       _socketClient!.sink.add(message);
       DateTime now = DateTime.now();
-      String formattedDateTime = DateFormat('yyyy-MM-dd HH:mm:ss').format(now);
+      String formattedDateTime =
+          DateFormat('[yyyy-MM-dd HH:mm:ss]').format(now);
       if (!sentMessages.contains(message)) {
         sentMessages.add(message);
-        listMessages.add("$formattedDateTime $message");
+        listMessages.add("$formattedDateTime $message".trim());
         saveMessages(listMessages, filePath);
       }
     } else {

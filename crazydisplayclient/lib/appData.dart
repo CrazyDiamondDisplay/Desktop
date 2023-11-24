@@ -1,5 +1,6 @@
 // ignore_for_file: file_names, camel_case_types
 
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
@@ -24,6 +25,7 @@ class AppData with ChangeNotifier {
 
   IOWebSocketChannel? _socketClient;
   ConnectionStatus connectionStatus = ConnectionStatus.disconnected;
+  Completer<bool> _connectionCompleter = Completer<bool>();
 
   String? mySocketId;
   List<dynamic> listClients = [];
@@ -69,29 +71,39 @@ class AppData with ChangeNotifier {
     }
   }
 
-  void connectToServer() async {
-    _socketClient ??= IOWebSocketChannel.connect("ws://$ip:$port");
-    _socketClient!.stream.listen((message) {
-      final data = jsonDecode(message);
-      listClients.add(data);
-
-      if (connectionStatus != ConnectionStatus.connected) {
-        connectionStatus = ConnectionStatus.connected;
+  Future<bool> connectToServer(String username, String password) async {
+    try {
+      if (_socketClient != null) {
+        disconnectFromServer();
       }
-    });
-  }
+      _socketClient ??= IOWebSocketChannel.connect("ws://192.168.0.25:$port");
+      Completer<bool> connectionCompleter = Completer<bool>();
 
-  bool checkLogin(String username, String password) {
-    if (username == 'admin' && password == 'password') {
-      return true; // Successful login
-    } else {
-      return false; // Failed login
+      _socketClient!.sink.add(
+          "{\"type\": \"login\", \"user\": \"$username\", \"pass\": \"$password\"}");
+
+      _socketClient!.stream.listen((message) {
+        final data = jsonDecode(message);
+        if (data['valid'] == "true") {
+          if (connectionStatus != ConnectionStatus.connected) {
+            connectionStatus = ConnectionStatus.connected;
+            connectionCompleter.complete(true);
+          }
+        } else {
+          disconnectFromServer();
+          connectionCompleter.complete(false);
+        }
+      });
+      return await connectionCompleter.future;
+    } catch (e) {
+      print("Error during connection: $e");
+      return false;
     }
   }
 
   void sendMessage(String message) {
     if (_socketClient != null) {
-      _socketClient!.sink.add(message);
+      _socketClient!.sink.add("{\"type\": \"mssg\", \"text\":\"$message\"}");
       DateTime now = DateTime.now();
       String formattedDateTime =
           DateFormat('[yyyy-MM-dd HH:mm:ss]').format(now);
@@ -107,9 +119,13 @@ class AppData with ChangeNotifier {
 
   disconnectFromServer() async {
     // Simulate connection delay
-    _socketClient!.sink.close();
-    if (connectionStatus == ConnectionStatus.connected) {
-      connectionStatus = ConnectionStatus.disconnected;
+    if (_socketClient != null) {
+      _socketClient!.sink.close();
+      _socketClient!.stream.drain(); // Added line to close the stream
+      _socketClient = null;
+      if (connectionStatus == ConnectionStatus.connected) {
+        connectionStatus = ConnectionStatus.disconnected;
+      }
     }
   }
 

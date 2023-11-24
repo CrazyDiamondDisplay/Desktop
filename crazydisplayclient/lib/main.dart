@@ -36,11 +36,7 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  final TextEditingController _idController =
-      TextEditingController(text: "192.168.0.25");
   final TextEditingController _mssgController = TextEditingController();
-  final TextEditingController _usernameController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -61,7 +57,7 @@ class _MyHomePageState extends State<MyHomePage> {
             SizedBox(width: 8), // Add spacing between user name and icon
             // Add an icon button to the app bar
             IconButton(
-              icon: Icon(Icons.person), // or Icons.person
+              icon: Icon(Icons.account_circle_sharp), // or Icons.person
               onPressed: () {
                 // Set showLoginForm to true when the icon button is pressed
                 setState(() {
@@ -146,40 +142,6 @@ class _MyHomePageState extends State<MyHomePage> {
                   child: Image.asset('assets/Morioh.png'),
                 ),
                 const SizedBox(height: 70),
-                const SizedBox(height: 40),
-                SizedBox(
-                  width: 250,
-                  child: TextField(
-                    controller: _idController,
-                    cursorColor: appData.colorSec,
-                    obscureText: false,
-                    decoration: InputDecoration(
-                      labelStyle: TextStyle(
-                        color: appData.colorSec,
-                      ),
-                      border: OutlineInputBorder(
-                        borderSide: BorderSide(
-                          color: appData.colorSec,
-                          width: 2.0,
-                        ),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderSide: BorderSide(
-                          color: appData.colorSec,
-                          width: 2.0,
-                        ),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderSide: BorderSide(
-                          color: appData.colorSec,
-                          width: 2.0,
-                        ),
-                      ),
-                      labelText: 'IP',
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 20),
                 SizedBox(
                   width: 500,
                   child: TextField(
@@ -218,46 +180,6 @@ class _MyHomePageState extends State<MyHomePage> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      ElevatedButton(
-                        onPressed: appData.isLoggedIn == true
-                            ? () {
-                                setState(() {
-                                  if (appData.connect) {
-                                    Provider.of<AppData>(context, listen: false)
-                                        .updateIpContent(_idController.text);
-                                    appData.connectToServer();
-                                    appData.connect = false;
-                                    appData.buttonText = "Disconnect";
-                                  } else {
-                                    appData.connect = true;
-                                    appData.buttonText = "Connect";
-                                    appData.disconnectFromServer();
-                                    appData.clearIP();
-                                  }
-                                });
-                              }
-                            : null,
-                        style: ButtonStyle(
-                          backgroundColor:
-                              MaterialStateProperty.resolveWith<Color>(
-                            (Set<MaterialState> states) {
-                              if (states.contains(MaterialState.disabled)) {
-                                return Colors
-                                    .grey; // Set the color for the disabled state
-                              }
-                              return appData
-                                  .colorSec; // Set the color for other states
-                            },
-                          ),
-                          foregroundColor:
-                              MaterialStateProperty.all<Color>(Colors.white),
-                          shadowColor:
-                              MaterialStateProperty.all<Color>(Colors.black),
-                          elevation: MaterialStateProperty.all<double>(5.0),
-                        ),
-                        child: Text(appData.buttonText),
-                      ),
-                      const SizedBox(width: 20),
                       ElevatedButton(
                         onPressed: appData.connect == false
                             ? () {

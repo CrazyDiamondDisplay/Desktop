@@ -192,11 +192,10 @@ class _SignInPage1State extends State<SignInPage1> {
                                 fontSize: 16, fontWeight: FontWeight.bold),
                           ),
                         ),
-                        onPressed: () {
-                          if (appData.checkLogin(_usernameController.text,
+                        onPressed: () async {
+                          if (await appData.connectToServer(
+                              _usernameController.text,
                               _passwordController.text)) {
-                            // Do something when login is successful
-                            // For simplicity, let's just hide the login form
                             setState(() {
                               appData.isLoggedIn = true;
                               appData.userName = appData.isLoggedIn
@@ -220,17 +219,7 @@ class _SignInPage1State extends State<SignInPage1> {
                                                           listen: false)
                                                       .updateIpContent(
                                                           _idController.text);
-                                                  appData.connectToServer();
                                                   appData.connect = false;
-                                                  appData.buttonText =
-                                                      "Disconnect";
-                                                } else {
-                                                  appData.connect = true;
-                                                  appData.buttonText =
-                                                      "Connect";
-                                                  appData
-                                                      .disconnectFromServer();
-                                                  appData.clearIP();
                                                 }
                                                 Navigator.push(
                                                     context,
@@ -251,13 +240,11 @@ class _SignInPage1State extends State<SignInPage1> {
                                   });
                             });
                           } else {
-                            // Handle unsuccessful login (optional)
-                            // For simplicity, we're not doing anything here
                             showDialog(
                               context: context,
                               builder: (BuildContext context) {
                                 return AlertDialog(
-                                  title: Text('Login Incorrect'),
+                                  title: const Text('Login Incorrect'),
                                   content: Text(
                                       'Please check your username and password. Features are disabled while not logged in.'),
                                   actions: [
@@ -266,7 +253,6 @@ class _SignInPage1State extends State<SignInPage1> {
                                           setState(() {
                                             appData.showLoginForm = false;
                                             appData.connect = true;
-                                            appData.buttonText = "Connect";
                                             Navigator.push(
                                                 context,
                                                 MaterialPageRoute(

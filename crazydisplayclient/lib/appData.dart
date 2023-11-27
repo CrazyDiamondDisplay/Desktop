@@ -3,6 +3,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:web_socket_channel/io.dart';
@@ -33,12 +34,14 @@ class AppData with ChangeNotifier {
   List<String> sentMessages = [];
   String selectedClient = "";
   int? selectedClientIndex;
+  String? imagePath = "";
   String messages = "";
   String filePath = ("assets/listMessages.txt");
 
   bool file_saving = false;
   bool file_loading = false;
   bool isLoggedIn = false;
+  bool imageIsLoaded = false;
   bool showLoginForm = true;
   String userName = "Not logged in";
 
@@ -71,12 +74,10 @@ class AppData with ChangeNotifier {
     }
   }
 
-  Future<bool> connectToServer(String username, String password) async {
+  Future<bool> connectToServer(
+      String ip, String username, String password) async {
     try {
-      if (_socketClient != null) {
-        disconnectFromServer();
-      }
-      _socketClient ??= IOWebSocketChannel.connect("ws://192.168.0.25:$port");
+      _socketClient ??= IOWebSocketChannel.connect("ws://$ip:$port");
       Completer<bool> connectionCompleter = Completer<bool>();
 
       _socketClient!.sink.add(
@@ -84,15 +85,17 @@ class AppData with ChangeNotifier {
 
       _socketClient!.stream.listen((message) {
         final data = jsonDecode(message);
-        if (data['valid'] == "true") {
-          if (connectionStatus != ConnectionStatus.connected) {
-            connectionStatus = ConnectionStatus.connected;
-            connectionCompleter.complete(true);
+        try {
+          if (data['valid'] == "true") {
+            if (connectionStatus != ConnectionStatus.connected) {
+              connectionStatus = ConnectionStatus.connected;
+              connectionCompleter.complete(true);
+            }
+          } else {
+            disconnectFromServer();
+            connectionCompleter.complete(false);
           }
-        } else {
-          disconnectFromServer();
-          connectionCompleter.complete(false);
-        }
+        } catch (e) {}
       });
       return await connectionCompleter.future;
     } catch (e) {
@@ -121,7 +124,6 @@ class AppData with ChangeNotifier {
     // Simulate connection delay
     if (_socketClient != null) {
       _socketClient!.sink.close();
-      _socketClient!.stream.drain(); // Added line to close the stream
       _socketClient = null;
       if (connectionStatus == ConnectionStatus.connected) {
         connectionStatus = ConnectionStatus.disconnected;
@@ -151,5 +153,44 @@ class AppData with ChangeNotifier {
     var lines = file.readAsLinesSync();
 
     return lines;
+  }
+
+  Future<void> pickImage() async {
+    FilePickerResult? result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['jpg', 'png'],
+    );
+    if (result != null) {
+      imagePath = result.files.single.path;
+      notifyListeners();
+    }
+  }
+
+  void sendImageViaWebSocket(String? image) async {
+    try {
+      // Pick an image using FilePicker
+
+      if (image != null) {
+        File imageFile = File(image);
+        List<int> bytes = await imageFile.readAsBytes();
+
+        // Encode image bytes to base64
+        String base64Image = base64Encode(bytes);
+
+        // Prepare a JSON object with image data
+        Map<String, dynamic> imageData = {
+          'type': 'img',
+          'image': base64Image,
+        };
+
+        // Convert the JSON object to a string
+        String jsonMessage = jsonEncode(imageData);
+
+        // Send the image data via WebSocket
+        _socketClient?.sink.add(jsonMessage);
+      }
+    } catch (e) {
+      print('Error sending image: $e');
+    }
   }
 }

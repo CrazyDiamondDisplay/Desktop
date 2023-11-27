@@ -1,7 +1,9 @@
+import 'dart:io';
+
 import 'package:crazydisplayclient/appData.dart';
-import 'package:crazydisplayclient/clientLayout.dart';
 import 'package:crazydisplayclient/messageLayout.dart';
 import 'package:crazydisplayclient/signInLayout.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -56,15 +58,85 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
             SizedBox(width: 8), // Add spacing between user name and icon
             // Add an icon button to the app bar
-            IconButton(
-              icon: Icon(Icons.account_circle_sharp), // or Icons.person
-              onPressed: () {
-                // Set showLoginForm to true when the icon button is pressed
-                setState(() {
-                  appData.showLoginForm = true;
-                });
+            PopupMenuButton<String>(
+              icon: Icon(Icons.account_circle_sharp),
+              offset: Offset(0, 35),
+              itemBuilder: (BuildContext context) {
+                if (appData.isLoggedIn) {
+                  return [
+                    PopupMenuItem<String>(
+                      value: 'logout',
+                      child: Text('Log Out'),
+                    ),
+                  ];
+                } else {
+                  return [
+                    PopupMenuItem<String>(
+                      value: 'login',
+                      child: Text('Log In'),
+                    )
+                  ];
+                }
               },
-            ),
+              onSelected: (String value) {
+                if (value == 'login') {
+                  setState(() {
+                    appData.showLoginForm = true;
+                  });
+                } else {
+                  showDialog(
+                    context: context,
+                    builder: (BuildContext context) {
+                      return AlertDialog(
+                        title: const Text('Log Out'),
+                        content: Text('Are you sure you want to log out?'),
+                        actions: [
+                          TextButton(
+                              onPressed: () {
+                                setState(() {
+                                  appData.disconnectFromServer();
+                                  appData.isLoggedIn = false;
+                                  appData.connect = !appData.connect;
+                                  appData.userName = "Not logged in";
+                                  Navigator.pop(context);
+                                  showDialog(
+                                      context: context,
+                                      builder: (BuildContext context) {
+                                        return AlertDialog(
+                                          title: const Text('Logged Out'),
+                                          content:
+                                              Text('You have been logged out'),
+                                          actions: [
+                                            TextButton(
+                                                onPressed: () {
+                                                  setState(() {
+                                                    Navigator.pop(context);
+                                                  });
+                                                },
+                                                child: Text('OK',
+                                                    style: TextStyle(
+                                                        color:
+                                                            appData.colorSec)))
+                                          ],
+                                        );
+                                      });
+                                });
+                              },
+                              child: Text('Log out',
+                                  style: TextStyle(color: appData.colorSec))),
+                          TextButton(
+                              onPressed: () {
+                                Navigator.pop(context);
+                              },
+                              child: Text('Cancel',
+                                  style: TextStyle(color: appData.colorSec))),
+                        ],
+                      );
+                    },
+                  );
+                }
+              },
+            )
           ],
         ),
       ),
@@ -72,31 +144,23 @@ class _MyHomePageState extends State<MyHomePage> {
         child: ListView(
           padding: EdgeInsets.zero,
           children: <Widget>[
-            DrawerHeader(
-              decoration: BoxDecoration(
-                color: appData.colorSec,
-              ),
-              child: Text(
-                'Client and message list',
-                style: TextStyle(
-                  color: Colors.white,
+            SizedBox(
+              height: 64.0,
+              child: DrawerHeader(
+                decoration: BoxDecoration(color: appData.colorSec),
+                margin: EdgeInsets.all(0.0),
+                padding: EdgeInsets.all(0.0),
+                child: Center(
+                  child:
+                      Text('Features', style: TextStyle(color: Colors.white)),
                 ),
               ),
             ),
             // Add your sidebar content here
             ListTile(
-              title: Text('Clients'),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => ClientesPage()),
-                );
-              },
-            ),
-            ListTile(
               title: Text('Messages'),
               onTap: () {
-                if (appData.connectionStatus == ConnectionStatus.connected) {
+                if (appData.isLoggedIn) {
                   Navigator.push(
                     context,
                     MaterialPageRoute(builder: (context) => MensajesPage()),
@@ -177,7 +241,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 const SizedBox(height: 40),
                 SizedBox(
                   width: 320,
-                  child: Row(
+                  child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       ElevatedButton(
@@ -204,7 +268,70 @@ class _MyHomePageState extends State<MyHomePage> {
                               MaterialStateProperty.all<Color>(Colors.black),
                           elevation: MaterialStateProperty.all<double>(5.0),
                         ),
-                        child: const Text('Send'),
+                        child: const Text('Send message'),
+                      ),
+                      _gap(),
+                      IconButton(
+                        color: appData.colorSec,
+                        iconSize: 125,
+                        onPressed: () {
+                          setState(() {
+                            appData.pickImage();
+                            appData.imageIsLoaded = !appData.imageIsLoaded;
+                          });
+                        },
+                        icon: appData.imagePath!.isNotEmpty
+                            ? Image.file(File(appData.imagePath!))
+                            : Icon(Icons.image),
+                      ),
+                      const SizedBox(height: 16),
+                      ElevatedButton(
+                        onPressed: appData.connect == false
+                            ? () {
+                                if (appData.imageIsLoaded) {
+                                  appData
+                                      .sendImageViaWebSocket(appData.imagePath);
+                                } else {
+                                  showDialog(
+                                      context: context,
+                                      builder: (BuildContext context) {
+                                        return AlertDialog(
+                                          title: Text('Error'),
+                                          content:
+                                              Text('No image has been loaded'),
+                                          actions: [
+                                            TextButton(
+                                              onPressed: () {
+                                                // Close the alert dialog
+                                                Navigator.of(context).pop();
+                                              },
+                                              child: Text('OK'),
+                                            ),
+                                          ],
+                                        );
+                                      });
+                                }
+                              }
+                            : null,
+                        style: ButtonStyle(
+                          backgroundColor:
+                              MaterialStateProperty.resolveWith<Color>(
+                            (Set<MaterialState> states) {
+                              if (states.contains(MaterialState.disabled)) {
+                                return Colors
+                                    .grey; // Set the color for the disabled state
+                              }
+                              return appData
+                                  .colorSec; // Set the color for other states
+                            },
+                          ),
+                          foregroundColor:
+                              MaterialStateProperty.all<Color>(Colors.white),
+                          shadowColor:
+                              MaterialStateProperty.all<Color>(Colors.black),
+                          elevation: MaterialStateProperty.all<double>(5.0),
+                        ),
+                        child: const Text('Send image'),
                       ),
                     ],
                   ),
@@ -217,4 +344,6 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
     );
   }
+
+  Widget _gap() => const SizedBox(height: 32);
 }

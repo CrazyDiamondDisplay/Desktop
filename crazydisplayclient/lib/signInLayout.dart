@@ -159,20 +159,6 @@ class _SignInPage1State extends State<SignInPage1> {
                           )),
                     ),
                     _gap(),
-                    CheckboxListTile(
-                      value: _rememberMe,
-                      onChanged: (value) {
-                        if (value == null) return;
-                        setState(() {
-                          _rememberMe = value;
-                        });
-                      },
-                      title: const Text('Remember me'),
-                      controlAffinity: ListTileControlAffinity.leading,
-                      dense: true,
-                      contentPadding: const EdgeInsets.all(0),
-                    ),
-                    _gap(),
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
@@ -194,6 +180,7 @@ class _SignInPage1State extends State<SignInPage1> {
                         ),
                         onPressed: () async {
                           if (await appData.connectToServer(
+                              _ipController.text,
                               _usernameController.text,
                               _passwordController.text)) {
                             setState(() {
@@ -201,7 +188,6 @@ class _SignInPage1State extends State<SignInPage1> {
                               appData.userName = appData.isLoggedIn
                                   ? _usernameController.text
                                   : 'Not logged in';
-                              appData.showLoginForm = false;
                               showDialog(
                                   context: context,
                                   builder: (BuildContext context) {

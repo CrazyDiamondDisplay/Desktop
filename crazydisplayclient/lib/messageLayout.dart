@@ -29,7 +29,7 @@ class MensajesPage extends StatelessWidget {
                   onTap: () {
                     // Mostrar el prompt de confirmación
                     _mostrarPrompt(
-                        context, _extraerTextoMensaje(message), appData);
+                        context, appData.extraerTextoMensaje(message), appData);
                   },
                   child: Padding(
                     padding: const EdgeInsets.all(8.0),
@@ -78,26 +78,5 @@ class MensajesPage extends StatelessWidget {
         );
       },
     );
-  }
-
-  String _extraerTextoMensaje(String mensaje) {
-    // Buscar la primera aparición de '[' y ']' en el mensaje
-    final inicioTexto = mensaje.indexOf('[');
-    final finTexto = mensaje.indexOf(']');
-
-    if (inicioTexto != -1 && finTexto != -1) {
-      // Extraer el texto antes de la primera aparición de '['
-      final textoAntes = mensaje.substring(0, inicioTexto);
-
-      // Extraer el texto después de la última aparición de ']'
-      final textoDespues = mensaje.substring(finTexto + 2);
-
-      // Combinar ambos textos
-      String textoFinal = textoAntes + textoDespues;
-      return textoFinal;
-    } else {
-      // Si no se encuentran corchetes, devolver el mensaje completo
-      return mensaje;
-    }
   }
 }

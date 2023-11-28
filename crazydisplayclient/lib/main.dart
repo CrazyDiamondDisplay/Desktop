@@ -45,7 +45,9 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget build(BuildContext context) {
     AppData appData = Provider.of<AppData>(context);
     appData.listMessages = appData.loadMessages(appData.filePath);
-    appData.sentMessages = appData.loadMessages(appData.filePath);
+    for (String message in appData.listMessages) {
+      appData.sentMessages.add(appData.extraerTextoMensaje(message));
+    }
     return Scaffold(
       appBar: AppBar(
         backgroundColor: appData.colorSec,

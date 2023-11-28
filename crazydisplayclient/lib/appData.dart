@@ -111,8 +111,6 @@ class AppData with ChangeNotifier {
       DateTime now = DateTime.now();
       String formattedDateTime =
           DateFormat('[yyyy-MM-dd HH:mm:ss]').format(now);
-      print(message);
-      print(sentMessages);
       if (!sentMessages.contains(message)) {
         sentMessages.add(message);
         listMessages.add("$formattedDateTime $message".trim());
@@ -223,5 +221,26 @@ class AppData with ChangeNotifier {
     List<File> imgFiles = listContent.whereType<File>().toList();
 
     return imgFiles;
+  }
+
+  String extraerTextoMensaje(String mensaje) {
+    // Buscar la primera aparición de '[' y ']' en el mensaje
+    final inicioTexto = mensaje.indexOf('[');
+    final finTexto = mensaje.indexOf(']');
+
+    if (inicioTexto != -1 && finTexto != -1) {
+      // Extraer el texto antes de la primera aparición de '['
+      final textoAntes = mensaje.substring(0, inicioTexto);
+
+      // Extraer el texto después de la última aparición de ']'
+      final textoDespues = mensaje.substring(finTexto + 2);
+
+      // Combinar ambos textos
+      String textoFinal = textoAntes + textoDespues;
+      return textoFinal;
+    } else {
+      // Si no se encuentran corchetes, devolver el mensaje completo
+      return mensaje;
+    }
   }
 }

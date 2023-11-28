@@ -6,6 +6,7 @@ import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:path/path.dart' as path;
 import 'package:web_socket_channel/io.dart';
 import 'package:intl/intl.dart';
 
@@ -110,6 +111,8 @@ class AppData with ChangeNotifier {
       DateTime now = DateTime.now();
       String formattedDateTime =
           DateFormat('[yyyy-MM-dd HH:mm:ss]').format(now);
+      print(message);
+      print(sentMessages);
       if (!sentMessages.contains(message)) {
         sentMessages.add(message);
         listMessages.add("$formattedDateTime $message".trim());
@@ -168,11 +171,13 @@ class AppData with ChangeNotifier {
 
   void sendImageViaWebSocket(String? image) async {
     try {
-      // Pick an image using FilePicker
-
       if (image != null) {
         File imageFile = File(image);
         List<int> bytes = await imageFile.readAsBytes();
+
+        String imageName = path.basename(image);
+
+        saveSentImage(imageName, imageFile);
 
         // Encode image bytes to base64
         String base64Image = base64Encode(bytes);
@@ -181,6 +186,7 @@ class AppData with ChangeNotifier {
         Map<String, dynamic> imageData = {
           'type': 'img',
           'image': base64Image,
+          'ext': image.substring(image.length - 3)
         };
 
         // Convert the JSON object to a string
@@ -192,5 +198,30 @@ class AppData with ChangeNotifier {
     } catch (e) {
       print('Error sending image: $e');
     }
+  }
+
+  Future<void> saveSentImage(String imageName, File image) async {
+    try {
+      String folderPath =
+          '${Directory.current.path}/lib//media/imageGallery/$imageName';
+
+      File file = File(folderPath);
+      if (!file.existsSync()) {
+        await image.copy(folderPath);
+      }
+    } catch (e) {
+      print("Unable to copy image");
+      print(e);
+    }
+  }
+
+  List<File> showImageGallery() {
+    String folderPath = '${Directory.current.path}/lib/media/imageGallery';
+    Directory imgFolder = Directory(folderPath);
+
+    List<FileSystemEntity> listContent = imgFolder.listSync();
+    List<File> imgFiles = listContent.whereType<File>().toList();
+
+    return imgFiles;
   }
 }

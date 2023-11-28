@@ -48,7 +48,10 @@ class MensajesPage extends StatelessWidget {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('Confirm'),
+          title: Text(
+            'Confirm',
+            style: TextStyle(color: appData.colorSec),
+          ),
           content: Text('Do you want to send this message?\n\n$mensaje'),
           actions: <Widget>[
             TextButton(
@@ -56,15 +59,20 @@ class MensajesPage extends StatelessWidget {
                 // Cerrar el cuadro de diálogo sin enviar el mensaje
                 Navigator.of(context).pop();
               },
-              child: Text('Cancel'),
+              child: Text(
+                'Cancel',
+                style: TextStyle(color: appData.colorSec),
+              ),
             ),
             TextButton(
               onPressed: () {
-                // Lógica para enviar el mensaje
                 appData.sendMessage(mensaje);
                 Navigator.of(context).pop(); // Cerrar el cuadro de diálogo
               },
-              child: Text('Send'),
+              child: Text(
+                'Send',
+                style: TextStyle(color: appData.colorSec),
+              ),
             ),
           ],
         );

@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:crazydisplayclient/appData.dart';
 import 'package:crazydisplayclient/messageLayout.dart';
 import 'package:crazydisplayclient/signInLayout.dart';
+import 'package:crazydisplayclient/imageGalleryLayout.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -44,6 +45,7 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget build(BuildContext context) {
     AppData appData = Provider.of<AppData>(context);
     appData.listMessages = appData.loadMessages(appData.filePath);
+    appData.sentMessages = appData.loadMessages(appData.filePath);
     return Scaffold(
       appBar: AppBar(
         backgroundColor: appData.colorSec,
@@ -187,7 +189,36 @@ class _MyHomePageState extends State<MyHomePage> {
                 }
               },
             ),
-            // Add more items as needed
+            ListTile(
+              title: Text('Image gallery'),
+              onTap: () {
+                if (appData.isLoggedIn) {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => ImagesPage()),
+                  );
+                } else {
+                  showDialog(
+                    context: context,
+                    builder: (BuildContext context) {
+                      return AlertDialog(
+                        title: Text('Error'),
+                        content: Text('You are not connected to the server'),
+                        actions: [
+                          TextButton(
+                            onPressed: () {
+                              // Close the alert dialog
+                              Navigator.of(context).pop();
+                            },
+                            child: Text('OK'),
+                          ),
+                        ],
+                      );
+                    },
+                  );
+                }
+              },
+            )
           ],
         ),
       ),
@@ -277,7 +308,9 @@ class _MyHomePageState extends State<MyHomePage> {
                         onPressed: () {
                           setState(() {
                             appData.pickImage();
-                            appData.imageIsLoaded = !appData.imageIsLoaded;
+                            if (!appData.imageIsLoaded) {
+                              appData.imageIsLoaded = !appData.imageIsLoaded;
+                            }
                           });
                         },
                         icon: appData.imagePath!.isNotEmpty
